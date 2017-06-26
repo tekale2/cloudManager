@@ -1,0 +1,9 @@
+aggiestack config --hardware hdwr-config.txt
+aggiestack show hardware
+aggiestack config --images image-config.txt
+aggiestack show images
+aggiestack config --flavors flavor-config.txt
+aggiestack show flavors
+aggiestack admin show instances
+aggiestack server create --image linux-ubuntu --flavor small my-first-instance
+aggiestack admin show instances
