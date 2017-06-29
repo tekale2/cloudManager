@@ -1,0 +1,17 @@
+aggiestack config --hardware hdwr-config.txt <SUCCESS>
+aggiestack config --images image-config.txt <SUCCESS>
+aggiestack config --flavors flavor-config.txt <SUCCESS>
+aggiestack server create --image linux-ubuntu --flavor xlarge my-first-instance <SUCCESS>
+aggiestack server create --image linux-ubuntu --flavor xlarge my-2-instance <SUCCESS>
+aggiestack server create --image linux-ubuntu --flavor xlarge my-3-instance <SUCCESS>
+aggiestack server create --image linux-ubuntu --flavor xlarge my-4-instance <SUCCESS>
+aggiestack server create --image linux-ubuntu --flavor xlarge my-5-instance <SUCCESS>
+aggiestack server create --image linux-ubuntu --flavor xlarge my-6-instance <FAILURE>
+aggiestack admin show instances <SUCCESS>
+aggiestack admin show hardware <SUCCESS>
+aggiestack server list <SUCCESS>
+aggiestack server delete my-first-instance <SUCCESS>
+aggiestack admin show instances <SUCCESS>
+aggiestack admin show hardware <SUCCESS>
+aggiestack server create --image linux-ubuntu --flavor xlarge my-4-instance <FAILURE>
+aggiestack server create --image linux-ubuntu --flavor xlarge my-6-instance <SUCCESS>
