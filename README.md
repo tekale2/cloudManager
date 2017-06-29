@@ -1,2 +1,4 @@
-# 489-17-b
-Cloud Computing Project 4 
+#Cloud Computing Project 4
+An cloud resource management project in python
+
+please run as python aggiestack.py "inputFilename"
