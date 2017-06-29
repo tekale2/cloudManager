@@ -169,6 +169,8 @@ class CloudManager:
             if tup[0] == hdwrName:
                 tup[1]-=1
                 break
+        # delete the instance entry
+        del CloudManager.InstanceDict[instName]
         return "Successfully deleted Instance "+instName
 
 
