@@ -17,9 +17,10 @@ class CloudManager:
                     info = [str(x) for x in line.strip().split()]
                     if configType == CONFIG_TYPES[0]:
                         if configSize >0:
-                            CloudManager.RackDict[info[0]] =RackManager(info[0],info[1])
+                            CloudManager.RackDict[info[0]] = RackManager(info[0],info[1])
                             configSize-=1
                         elif configSize == 0:
+                            configSize-=1
                             continue
                         else:
                             CloudManager.RackDict[info[1]].addHdwr(info)
