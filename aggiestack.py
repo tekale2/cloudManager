@@ -41,6 +41,60 @@ class CloudManager:
             print "File "+filename+" does not exist"
             return "FAILURE"
 
+# Function to add new machine to specified rack
+    def addNewHdwr(self, mem,disks,vcpus,ip,hdwrName,rackName):
+        if (mem == "" or disks == "" or vcpus =="" or ip=="" or hdwrName ==""):
+            print("Invalid add new machine command")
+            return "FAILURE"
+        if rackName not in CloudManager.RackDict:
+            print("Invalid rack name")
+            return "FAILURE"
+        info = [hdwrName,rackName,ip,mem,disks,vcpus]
+        return CloudManager.RackDict[rackName].addHdwr(info)
+
+# Function to remove hardware from the datacenter
+    def removeHdwr(self,hdwrName):
+        retVal = "FAILURE"
+        for name,rack in CloudManager.RackDict.iteritems():
+            retVal = rack.removeHdwr(hdwrName)
+            if retVal == "SUCCESS":
+                break
+        return retVal
+
+# Function to evacuate the rack with rack name
+# For this project instances running on that rack would be
+# created on  other machines and this rack would be removed
+
+    def evacuateRack(self,rackName):
+        if rackName not in CloudManager.RackDict:
+            return "FAILURE"
+        instList =[]
+        # remove rack from the racklist to avoid creation of new instances
+        CloudManager.RackList.remove(rackName)
+        for inst,rack in CloudManager.InstDict.iteritems():
+            if rack == rackName:
+                instList.append(inst)
+        evcuatedCount = 0
+        
+        # spwan the instaces on new hdwr
+        for inst in instList:
+            imageName =\
+            CloudManager.RackDict[rackName].instanceDict[inst].imageName
+            flavorName =\
+            CloudManager.RackDict[rackName].instanceDict[inst].flavorName
+            del CloudManager.InstDict[inst]
+            retVal = self.createInst(imageName, flavorName, inst)
+            if retVal == "SUCCESS":
+                evcuatedCount+=1
+                CloudManager.RackDict[rackName].deleteInst(inst)
+            else:
+                CloudManager.InstDict[inst] = rackName
+        if evcuatedCount == len(instList):
+            return "SUCCESS"
+        else:
+            "Not all instances running on th rack "+rackName+" were evacuated"
+            return "FAILURE"
+
 # Function to show the configuration data
     def showConfigData(self, configType):
         configDict = None
@@ -221,6 +275,37 @@ def execCommands():
                     elif params[2].lower() == "show" and (params[3].lower() ==\
                     "imagecaches" or params[3].lower() == "imagecaches"):
                         retVal = cloudManager.showImgcaches(params[4])
+                    elif params[2].lower() == "remove":
+                        retVal = cloudManager.removeHdwr(params[3])
+                    elif params[2].lower() == "evacuate":
+                        retVal = cloudManager.evacuateRack(params[3])
+                    elif params[2].lower() == "add":
+                        mem   = ""
+                        disks = ""
+                        vcpus = ""
+                        ip    = ""
+                        rackName  = ""
+                        hdwrName = ""
+                        for i in range(3,len(params)):
+                            if params[i].lower() == "--mem":
+                                mem = params[i+1]
+                                i+=1
+                            elif params[i].lower() == "--disk":
+                                disks = params[i+1]
+                                i+=1
+                            elif params[i].lower() == "--rack":
+                                rackName = params[i+1]
+                                i+=1
+                            elif params[i].lower() == "--vcpus":
+                                vcpus = params[i+1]
+                                i+=1
+                            elif params[i].lower() == "--ip":
+                                ip = params[i+1]
+                                i+=1
+                            else:
+                                hdwrName = params[i]
+                        retVal = cloudManager.addNewHdwr(mem,disks,vcpus,ip,\
+                        hdwrName,rackName)                        
                     else:
                         print("Invalid command")
                         continue

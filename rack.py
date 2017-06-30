@@ -86,10 +86,28 @@ class RackManager:
 
 # Function to add a new hdwr to the rack
     def addHdwr(self,info):
+        if info[0] in self.hdwrConfigDict:
+            print ("Hdwr "+info[0]+" already exists")
+            return "FAILURE"
         self.hdwrConfigDict[info[0]] = HdwrConfig(info[0],info[1],info[2],\
         info[3],info[4],info[5])
         self.currLoadList.append([info[0],0])
+        return "SUCCESS"
 
+# Function to remove hdwr from activley hosting new instances
+    def removeHdwr(self,name):
+        
+        if name not in self.hdwrConfigDict:
+            return "FAILURE"
+        for tup in self.currLoadList:
+            if name == tup[0]:
+                self.currLoadList.remove(tup)
+                break
+        if name in self.hdwrConfigDict:
+            del self.hdwrConfigDict[name]
+        return "SUCCESS"
+    
+        
 # Static functions to copy the required configuration data
     @staticmethod
     def copyImageConfigDict(imageDict):
