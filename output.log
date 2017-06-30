@@ -5,6 +5,7 @@ aggiestack config --flavors flavor-config.txt <SUCCESS>
 aggiestack server create --image linux-ubuntu --flavor small my-first-instance <SUCCESS>
 aggiestack server create --image linux-ubuntu --flavor medium my-second-instance <SUCCESS>
 aggiestack admin show instances <SUCCESS>
+aggiestack admin remove k1 <SUCCESS>
 aggiestack admin evacuate r1 <SUCCESS>
 aggiestack admin add --mem 8 --disk 4 --vcpus 4 --ip 128.0.0.23 --rack r1 janice <SUCCESS>
 aggiestack show hardware <SUCCESS>
