@@ -100,6 +100,8 @@ class CloudManager:
             print (rackName+" does not exist")
             return "FAILURE"
         CloudManager.RackDict[rackName].showImgData()
+        print("rack "+rackName+" has mem:-> " +\
+        str(CloudManager.RackDict[rackName].remCapacity)+" remaining")
         return "SUCCESS"
         
 
