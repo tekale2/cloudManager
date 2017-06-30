@@ -3,7 +3,7 @@ from rack import *
 class CloudManager:
     RackDict ={} # Stores info about all the active racks
     InstDict ={} # Stores info about which instance is running on which rack
-    
+    RackList =[] # stores rackNames in sorted order of remaining capacity
     # Store all configuration data as dicts with name as key and object as value
     ImageConfigDict = {}
     FlavorConfigDict= {}
@@ -18,6 +18,7 @@ class CloudManager:
                     if configType == CONFIG_TYPES[0]:
                         if configSize >0:
                             CloudManager.RackDict[info[0]] = RackManager(info[0],info[1])
+                            CloudManager.RackList.append(info[0])
                             configSize-=1
                         elif configSize == 0:
                             configSize-=1
@@ -60,16 +61,14 @@ class CloudManager:
             config.showConfig()
         if configType == CONFIG_TYPES[1]:
             for key,rack in CloudManager.RackDict.iteritems():
-                retVal = rack.showImgData()
-                if retVal != "SUCCESS":
-                    print "Error in displaying info for rack "+key
+                rack.showImgData()
         return "SUCCESS"
 
 # Function to show remaining Hdwr resources
     def showRemHdwr(self):
         retVal = "FAILURE"
         for name,rack in CloudManager.RackDict.iteritems():
-            retVal = rack.showRemInfo()
+            retVal = rack.showRemHdwr()
             if(retVal != "SUCCESS"):
                 break
         return retVal
@@ -81,31 +80,74 @@ class CloudManager:
             print "No instances running"
             return "FAILURE"
         for name,rack in CloudManager.RackDict.iteritems():
-            retVal = rack.showInstanceInfo()
+            retVal = rack.showInstances()
             if(retVal != "SUCCESS"):
                 break
         return retVal
 
 # Function to show on which Hdwr and rack each instance is running on
     def showHdwrInst(self):
-        retVal = "FAILURE"
         if len(CloudManager.InstDict) == 0:
-            print "No instances running"
-            return "FAILURE"
+            print "No instances running on any rack"
+            return "SUCCESS"
         for name,rack in CloudManager.RackDict.iteritems():
-            retVal = rack.showHdwrInfo()
-            if(retVal != "SUCCESS"):
-                break
-        return retVal
+            rack.showHdwrInst()
+        return "SUCCESS"
+
+# Function to show image caches on a given rack
+    def showImgcaches(self,rackName):
+        if rackName not in CloudManager.RackDict:
+            print (rackName+" does not exist")
+            return "FAILURE"
+        CloudManager.RackDict[rackName].showImgData()
+        return "SUCCESS"
+        
 
 # Function to create a new instace on this rack
 # priority to rack where image is pre-cached
     def createInst(self,imageName, flavorName, instName):
+        if instName in CloudManager.InstDict:
+            print(instName+" already exists")
+            return "FAILURE"
+        elif flavorName not in CloudManager.FlavorConfigDict:
+            print("Invalid flavorName "+flavorName)
+            return "FAILURE"
+        elif imageName not in CloudManager.ImageConfigDict:
+            print("Invalid imageName "+imageName)
+            return "FAILURE"
+        firstPrior = None
+        createImg  = True
+
+# proirtize placement of inst on cache with image else with maximumrem capacity
+        CloudManager.RackList.sort(key=lambda x:CloudManager.RackDict[x].remCapacity\
+        ,reverse=True)
+        for rackName in CloudManager.RackList:
+            if CloudManager.RackDict[rackName].isInstCreatable(flavorName):
+                if firstPrior == None:
+                    firstPrior = rackName
+                if CloudManager.RackDict[rackName].isImageInCache(imageName):
+                    firstPrior = rackName
+                    createImg = False
+                    break
+        if firstPrior == None:
+            print("Resoucres exhausted, Instance "+instName+" cannot be created")
+            return "FAILURE"
+
+        # Create the instance on the rack "firstPrior"
+        CloudManager.InstDict[instName] = firstPrior
+        if createImg:
+            CloudManager.RackDict[firstPrior].addImgToCache(imageName)
+        CloudManager.RackDict[firstPrior].createInst(imageName, flavorName, instName)
         return "SUCCESS"
 
 # Function to delete an existing instance
     def deleteInst(self,instName):
-        return "SUCCESS"
+        if instName not in CloudManager.InstDict:
+            print (instName +" does not exists")
+            return "FAILURE"
+        rackName = CloudManager.InstDict[instName]
+        del CloudManager.InstDict[instName]
+        return CloudManager.RackDict[rackName].deleteInst(instName)
 
 
 # reads the input file and executes the commands
@@ -174,6 +216,9 @@ def execCommands():
                         retVal = cloudManager.showRemHdwr()
                     elif params[2].lower() == "show" and params[3].lower() == "instances":
                         retVal = cloudManager.showHdwrInst()
+                    elif params[2].lower() == "show" and (params[3].lower() ==\
+                    "imagecaches" or params[3].lower() == "imagecaches"):
+                        retVal = cloudManager.showImgcaches(params[4])
                     else:
                         print("Invalid command")
                         continue

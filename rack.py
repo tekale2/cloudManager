@@ -88,6 +88,7 @@ class RackManager:
     def addHdwr(self,info):
         self.hdwrConfigDict[info[0]] = HdwrConfig(info[0],info[1],info[2],\
         info[3],info[4],info[5])
+        self.currLoadList.append([info[0],0])
 
 # Static functions to copy the required configuration data
     @staticmethod
@@ -114,13 +115,13 @@ class RackManager:
           print "ImgCacheList empty on rack "+self.name
           return "Failure"
       for img in self.imgCacheList:
-          print "RackName:-> "+self.name+" ImgName:-> "+img
+          print "RackName:-> "+self.name+" has image ImgName:-> "+img
       return "Success"
 
 # Function to show remaining Hdwr resources
     def showRemHdwr(self):
         if len(self.hdwrConfigDict) == 0:
-            print "Hdwr Configuration was not loaded"
+            print "Hdwr Configuration was not loaded on rack "+self.name
             return "FAILURE"
         for name,config in self.hdwrConfigDict.iteritems():
             config.showRemInfo()
@@ -129,16 +130,46 @@ class RackManager:
 # Function to list all info about the instances running
     def showInstances(self):
         if len(self.instanceDict) == 0:
-            print "No instances running"
+            print "No instances running on rack "+self.name
             return "FAILURE"
         for name,config in self.instanceDict.iteritems():
             config.showInstanceInfo()
         return "SUCCESS"
 
+# Function to check if there is image in the cache
+    def isImageInCache(self,imgName):
+        return imgName in self.imgCacheList
+
+# Function to add image to the cache. Uses LIFO eviction scheme
+    def addImgToCache(self,imgName):
+        if RackManager.ImageConfigDict[imgName].size <= self.remCapacity:
+            self.remCapacity -= RackManager.ImageConfigDict[imgName].size
+            self.imgCacheList.append(imgName)
+        else:
+            while RackManager.ImageConfigDict[imgName].size > self.remCapacity:
+                img = self.imgCacheList.pop()
+                self.remCapacity += RackManager.ImageConfigDict[img].size
+            self.remCapacity -= RackManager.ImageConfigDict[imgName].size
+            self.imgCacheList.append(imgName)
+
+# Fuction to check if an instance can be created with a given flavor
+    def isInstCreatable(self,flavorName):
+        
+        self.currLoadList.sort(key=lambda tup:tup[1])
+        for tup in self.currLoadList:
+            if (self.hdwrConfigDict[tup[0]].remCores >= \
+                   RackManager.FlavorConfigDict[flavorName].numVCpus) and\
+                (self.hdwrConfigDict[tup[0]].remMem >= \
+                   RackManager.FlavorConfigDict[flavorName].mem) and\
+                (self.hdwrConfigDict[tup[0]].remDisks >= \
+                   RackManager.FlavorConfigDict[flavorName].numDisks):
+                       return True
+        return False
+            
 # Function to show on which Hdwr each instance is running on
     def showHdwrInst(self):
         if len(self.instanceDict) == 0:
-            print "No instances running"
+            print "No instances running on rack "+self.name
             return "FAILURE"
         for name,config in self.instanceDict.iteritems():
             config.showHdwrInfo()
@@ -167,6 +198,7 @@ class RackManager:
                        RackManager.FlavorConfigDict[flavorName].mem
                        self.hdwrConfigDict[tup[0]].remDisks -=\
                        RackManager.FlavorConfigDict[flavorName].numDisks
+                       break
                        
 # Function to delete an existing instance on this rack
     def deleteInst(self,instName):

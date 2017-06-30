@@ -1,10 +1,20 @@
 aggiestack config --hardware hdwr-config.txt <SUCCESS>
-aggiestack show hardware <SUCCESS>
 aggiestack config --images image-config.txt <SUCCESS>
-aggiestack show images <SUCCESS>
 aggiestack config --flavors flavor-config.txt <SUCCESS>
-aggiestack show flavors <SUCCESS>
-aggiestack admin show instances <FAILURE>
-aggiestack server create --image linux-ubuntu --flavor small my-first-instance <SUCCESS>
-aggiestack server create --image linux-ubuntu --flavor medium my-second-instance <SUCCESS>
-aggiestack admin show instances <FAILURE>
+aggiestack admin show hardware <SUCCESS>
+aggiestack server create --image linux-ubuntu --flavor xlarge my-1-instance <SUCCESS>
+aggiestack server create --image linux-ubuntu-16 --flavor xlarge my-2-instance <SUCCESS>
+aggiestack server create --image linux-sles --flavor xlarge my-3-instance <SUCCESS>
+aggiestack server create --image linux-ubuntu --flavor xlarge my-4-instance <SUCCESS>
+aggiestack server create --image linux-ubuntu --flavor xlarge my-5-instance <SUCCESS>
+aggiestack server create --image linux-ubuntu --flavor xlarge my-6-instance <FAILURE>
+aggiestack admin show instances <SUCCESS>
+aggiestack admin show hardware <SUCCESS>
+aggiestack server list <SUCCESS>
+aggiestack server delete my-1-instance <SUCCESS>
+aggiestack admin show instances <SUCCESS>
+aggiestack admin show hardware <SUCCESS>
+aggiestack server create --image linux-ubuntu --flavor xlarge my-4-instance <FAILURE>
+aggiestack server create --image linux-ubuntu --flavor xlarge my-6-instance <SUCCESS>
+aggiestack admin show imagecaches r1 <SUCCESS>
+aggiestack admin show imagecaches r2 <SUCCESS>
