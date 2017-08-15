@@ -1,4 +1,4 @@
-#Cloud Computing Project 4
+Cloud Computing Project 4
 
 A cloud resource management project in python
 
